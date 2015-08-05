@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deploy>
+    <systemSet id="ReviveSmartDB">
+        <dbAddress>192.168.100.64</dbAddress>
+        <dbPort>5000</dbPort>
+        <dbName>ReviveSmartDB</dbName>
+        <dbUser>sa</dbUser>
+        <dbpwd>123456</dbpwd>
+    </systemSet>
+    <systemSet id="advisory">
+        <dbAddress>192.168.169.217</dbAddress>
+        <dbPort>5000</dbPort>
+        <dbName>advisory</dbName>
+        <dbUser>sa</dbUser>
+        <dbpwd>123456</dbpwd>
+    </systemSet>
+    <httpAddress>192.168.169.217</httpAddress>
+    <httpPort>8007</httpPort>
+    <httpTimeOut>30</httpTimeOut>
+    
+    <secrets>
+        <secret id="1">qkW-rlD_XD4JPGeuU5QihmeKM_Rda-T1T7W1e487raufCg94wpts6viGVzekFIEw</secret>
+        <secret id="2">qkW-rlD_XD4JPGeuU5QihmeKM_Rda-T1T7W1e487raufCg94wpts6viGVzekFIEw</secret>
+    </secrets>
+</deploy>
