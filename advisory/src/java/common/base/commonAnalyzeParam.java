@@ -16,6 +16,8 @@ import net.sf.json.JSONObject;
  */
 public class commonAnalyzeParam {
 
+   
+
     private String RSID = null;
     private String token = null;
 

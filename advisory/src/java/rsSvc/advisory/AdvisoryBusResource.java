@@ -142,7 +142,16 @@ public class AdvisoryBusResource {
 
             if (resultParam.ResultCode >= 0) {
                 //return formationResult.formationResult(ResponseResultCode.Success, new ExecuteResultParam());
-                return formationResult.formationResult(ResponseResultCode.Success, selectReultStr, new ExecuteResultParam());
+                JSONObject resultJson = new JSONObject();
+                resultJson.accumulate("uId", selectReultStr);
+                if (resultParam.ResultJsonObject == null) {
+                    resultParam.ResultJsonObject = new JSONObject();
+                }
+                if (resultParam.ResultJsonObject == null) {
+                    resultParam.ResultJsonObject = new JSONObject();
+                }
+                resultParam.ResultJsonObject.accumulate(DeployInfo.ResultDataTag, resultJson);
+                return formationResult.formationResult(ResponseResultCode.Success, selectReultStr, new ExecuteResultParam(resultParam.ResultJsonObject));
             } else {
                 return formationResult.formationResult(ResponseResultCode.Error, new ExecuteResultParam(resultParam.errMsg, param));
             }
@@ -231,7 +240,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("processQ")
     public String processQ(String param) {
-        
+
         String paramKey_qId = "qId", paramKey_hUId = "hUId";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, selectResultStr = null;
@@ -280,7 +289,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("solveQ")
     public String solveQ(String param) {
-        
+
         String paramKey_qId = "qId", paramKey_hUId = "hUId";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, selectResultStr = null;
@@ -296,16 +305,16 @@ public class AdvisoryBusResource {
             advisoryAnalyzeParam.AnalyzeParamBodyToMap(param, paramMap);
 
             //1，判断问题是否已经处理，如果处理不能再进行操作
-            sqlStr = String.format("select count(*) as unsovle from question  where qId='%s' and qHandleFlag=2",
+            sqlStr = String.format("select qSolveFlag as unsovle from question  where qId='%s'",
                     UtileSmart.getStringFromMap(paramMap, paramKey_qId));
 
             selectResultStr = DBHelper.ExecuteSqlSelectOne(advisoryAnalyzeParam.getRSID(), sqlStr);
-            if (selectResultStr == null || selectResultStr.equals("1")) {
+            if (selectResultStr == null || selectResultStr.equals("2")) {
                 return formationResult.formationResult(ResponseResultCode.Error, new ExecuteResultParam("该问题已经处理，不能再进行操作", param));
             }
             sqlList = new ArrayList<String>();
             //更新question标记处理完成
-            sqlList.add(String.format("update question set qHandleFlag=2,qSovleDate=getdate() where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
+            sqlList.add(String.format("update question set qSolveFlag=2,qSovleDate=getdate() where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
             //更新 handler 标记solve 处理人
             sqlList.add(String.format("update Handler set hSolve=2 , hQuitDate=getdate() where qId='%s' and hUId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId), UtileSmart.getStringFromMap(paramMap, paramKey_hUId)));
 
@@ -327,7 +336,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("getVerifyCode")
     public String getVerifyCode(String param) {
-        
+
         String paramKey_uPhone = "uPhone";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, selectResultStr = null;
@@ -371,9 +380,9 @@ public class AdvisoryBusResource {
     @POST
     @Path("modifyPwd")
     public String modifyPwd(String param) {
-        
-        String paramKey_uName = "uName", paramKey_uPwd = "uPwd",paramKey_vcode="vcode";
-        
+
+        String paramKey_uName = "uName", paramKey_uPwd = "uPwd", paramKey_vcode = "vcode";
+
         ExecuteResultParam resultParam = null;
         String sqlStr = null, selectResultStr = null;
         Map<String, Object> paramMap = null;
@@ -396,7 +405,7 @@ public class AdvisoryBusResource {
             } else {
                 //调用  验证接口
 
-                sqlStr = String.format("update AdUser set uPwd = '%s' where uId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_uPwd),selectResultStr);
+                sqlStr = String.format("update AdUser set uPwd = '%s' where uId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_uPwd), selectResultStr);
                 resultParam = DBHelper.ExecuteSql(advisoryAnalyzeParam.getRSID(), sqlStr);
                 if (resultParam.ResultCode >= 0) {
                     return formationResult.formationResult(ResponseResultCode.Success, new ExecuteResultParam());
@@ -415,9 +424,9 @@ public class AdvisoryBusResource {
     @POST
     @Path("solveQList")
     public String solveQList(String param) {
-        
-        String paramKey_hUId = "hUId", paramKey_hSolve= "hSolve",paramKey_skipNum="skipNum",paramKey_topNum="topNum";
-        
+
+        String paramKey_hUId = "hUId", paramKey_hSolve = "hSolve", paramKey_skipNum = "skipNum", paramKey_topNum = "topNum";
+
         ExecuteResultParam resultParam = null, resultParam1 = null;
         String sqlStr = null, tempWhere = null;
         int skipNum = 0, topNum = 0;
@@ -478,7 +487,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("solveCount")
     public String solveCount(String param) {
-        String paramKey_hUId = "hUId", paramKey_hSolve= "hSolve";
+        String paramKey_hUId = "hUId", paramKey_hSolve = "hSolve";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, tempWhere = null;
         Map<String, Object> paramMap = null;
@@ -502,7 +511,7 @@ public class AdvisoryBusResource {
                     tempWhere = "";
                     break;
             }
-            sqlStr = String.format("select count(*) as sovleCount from Handler where hUname = '%s' %s ",
+            sqlStr = String.format("select count(*) as sovleCount from Handler where hUId = '%s' %s ",
                     UtileSmart.getStringFromMap(paramMap, paramKey_hUId), tempWhere);
             resultParam = DBHelper.ExecuteSqlSelect(advisoryAnalyzeParam.getRSID(), sqlStr);
             if (resultParam.ResultCode >= 0) {
