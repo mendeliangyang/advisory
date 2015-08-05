@@ -124,10 +124,12 @@ public class DeployInfo {
                     .getTextContent();
             httpTimeOut = UtileSmart.overrideParseShort(doc.getElementsByTagName("httpTimeOut").item(0)
                     .getTextContent());
-
+            httpRootPath = doc.getElementsByTagName("httpRootPath").item(0)
+                    .getTextContent();
+//httpRootPath
             //配置http文件目录
             StringBuffer deployHttpFilePath_sb = new StringBuffer();
-            deployHttpFilePath_sb.append("http://").append(GethttpAddress()).append(":").append(GethttpPort()).append("/ReviveSmartRS/FileDepot/");
+            deployHttpFilePath_sb.append("http://").append(GethttpAddress()).append(":").append(GethttpPort()).append(File.separator).append(httpRootPath).append("/FileDepot/");
             DeployHttpFilePath = deployHttpFilePath_sb.toString();
             deployHttpFilePath_sb = null;
            //  <a><aa></aa><aa></aa></a> 解析方法 
@@ -181,7 +183,7 @@ public class DeployInfo {
     private static String httpAddress = null;
     private static String httpPort = null;
     private static String ComputerIp = null;
-
+    private static String httpRootPath = null;
     private static short httpTimeOut = 5;
 
     public static short GetHttpTimeOut() throws Exception {

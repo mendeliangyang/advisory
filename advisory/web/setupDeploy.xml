@@ -16,10 +16,6 @@
     </systemSet>
     <httpAddress>192.168.169.217</httpAddress>
     <httpPort>8007</httpPort>
+    <httpRootPath>advisory</httpRootPath>
     <httpTimeOut>30</httpTimeOut>
-    
-    <secrets>
-        <secret id="1">qkW-rlD_XD4JPGeuU5QihmeKM_Rda-T1T7W1e487raufCg94wpts6viGVzekFIEw</secret>
-        <secret id="2">qkW-rlD_XD4JPGeuU5QihmeKM_Rda-T1T7W1e487raufCg94wpts6viGVzekFIEw</secret>
-    </secrets>
 </deploy>
