@@ -129,7 +129,7 @@ public class DeployInfo {
 //httpRootPath
             //配置http文件目录
             StringBuffer deployHttpFilePath_sb = new StringBuffer();
-            deployHttpFilePath_sb.append("http://").append(GethttpAddress()).append(":").append(GethttpPort()).append(File.separator).append(httpRootPath).append("/FileDepot/");
+            deployHttpFilePath_sb.append("http://").append(GethttpAddress()).append(":").append(GethttpPort()).append("/").append(httpRootPath).append("/FileDepot/");
             DeployHttpFilePath = deployHttpFilePath_sb.toString();
             deployHttpFilePath_sb = null;
            //  <a><aa></aa><aa></aa></a> 解析方法 
