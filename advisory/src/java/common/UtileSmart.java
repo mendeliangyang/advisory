@@ -7,6 +7,7 @@ package common;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -42,6 +43,10 @@ public class UtileSmart {
 
     public static String getStringFromMap(Map<String, Object> map, String key) throws Exception {
         return getObjectFromMap(map, key).toString();
+    }
+    
+    public static List<String> getListFromMap(Map<String, Object> map, String key) throws Exception {
+        return (List)getObjectFromMap(map, key);
     }
 
     /**

@@ -256,15 +256,19 @@ public class AdvisoryBusResource {
             advisoryAnalyzeParam.AnalyzeParamBodyToMap(param, paramMap);
 
             //1，判断问题是否已经处理，如果处理不能再进行操作
-            sqlStr = String.format("select qAnswerDate , qHandleFlag from question  where qId='%s' and qHandleFlag=1",
+            sqlStr = String.format("select qSolveFlag  from question  where qId='%s'",
                     UtileSmart.getStringFromMap(paramMap, paramKey_qId));
 
             selectResultStr = DBHelper.ExecuteSqlSelectOne(advisoryAnalyzeParam.getRSID(), sqlStr);
             sqlList = new ArrayList<String>();
             //2，判断响应是否是否为空如果不为空，   获取当前时间，并更新
             if (selectResultStr == null) {
-                sqlList.add(String.format("update question set qAnswerDate=getdate() where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
+                return formationResult.formationResult(ResponseResultCode.Error, new ExecuteResultParam("该问题不存在", param));
                 //new ExecuteResultParam("该问题已经处理，不能再进行操作", param)
+            } else if (selectResultStr.equals("3")) {
+                return formationResult.formationResult(ResponseResultCode.Error, new ExecuteResultParam("该问题已处理", param));
+            } else if (selectResultStr.equals("1")) {
+                sqlList.add(String.format("update question set qAnswerDate=getdate() ,qSolveFlag=3 where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
             }
             //3，插入handler 表，当前处理人
             sqlList.add(String.format("insert into Handler (qId,hUId,hPutDate,hSolve) values('%s','%s',getdate(),1)",

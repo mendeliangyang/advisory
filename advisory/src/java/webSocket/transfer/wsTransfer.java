@@ -5,13 +5,7 @@
  */
 package webSocket.transfer;
 
-import common.model.MsgFilterModel;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -50,7 +44,7 @@ public class wsTransfer {
     public void onOpen(Session session) {
         //peers.add(session);
         //common.RSLogger.LogInfo(String.format("AssignTrial onOpen '%s' open", session.getId()));
-        transferOrigin.openSesion.add(session);
+        transferOrigin.openSesions.add(session);
         System.out.println(String.format("AssignTrial onOpen '%s' open", session.getId()));
     }
 
