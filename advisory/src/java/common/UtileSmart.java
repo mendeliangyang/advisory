@@ -27,26 +27,37 @@ public class UtileSmart {
         }
     }
 
-    public static Object getObjectFromMap(Map<String, Object> map, String key) throws Exception {
+    public static Object getObjectFromMap(Map<String, Object> map, String key, boolean throwError) throws Exception {
         if (map == null || key == null) {
             throw new Exception("error on getObjectFromMap , paramateter is null.");
         }
         if (!map.containsKey(key)) {
-            throw new Exception("error on getObjectFromMap , map no containsKey :" + key);
+            if (throwError) {
+                throw new Exception("error on getObjectFromMap , map no containsKey :" + key);
+            }
+            return null;
         }
         Object value = map.get(key);
-        if (value == null) {
+        if (value == null && throwError) {
             throw new Exception(String.format("error on getObjectFromMap, The inside of the map %s value is empty ", key));
         }
         return value;
     }
 
     public static String getStringFromMap(Map<String, Object> map, String key) throws Exception {
-        return getObjectFromMap(map, key).toString();
+        return getObjectFromMap(map, key, true).toString();
     }
-    
-    public static List<String> getListFromMap(Map<String, Object> map, String key) throws Exception {
-        return (List)getObjectFromMap(map, key);
+
+    public static Object[] getListFromMap(Map<String, Object> map, String key) throws Exception {
+        return (Object[]) getObjectFromMap(map, key, true);
+    }
+
+    public static String tryGetStringFromMap(Map<String, Object> map, String key) throws Exception {
+        return getObjectFromMap(map, key, false).toString();
+    }
+
+    public static Object[] tryGetListFromMap(Map<String, Object> map, String key) throws Exception {
+        return (Object[]) getObjectFromMap(map, key, false);
     }
 
     /**

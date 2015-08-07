@@ -12,6 +12,7 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
+import common.RSLogger;
 
 /**
  *
@@ -19,23 +20,29 @@ import javax.websocket.server.ServerEndpoint;
  */
 @ServerEndpoint("/transfer")
 public class wsTransfer {
-    
-   
-    
-     public static void initialWSTransfer(){
-         //  读取数据信息到 chatRooms
-         
-     }
-    
 
-     @OnMessage
-    public String onMessage(Session session,String message) throws IOException {
-       System.out.println(message);
-       session.getBasicRemote().sendText("over");
+    public static void initialWSTransfer() {
+        //  读取数据信息到 chatRooms
+
+    }
+
+    @OnMessage
+    public String onMessage(Session session, String message) {
+        System.out.println(message);
+        try {
+            transferThreadPool.processMessagePoolExecute(new processMessageRunnable(message, session));
+        } catch (Exception ex) {
+            RSLogger.wsErrorLogInfo("onMessage process error." + ex.getLocalizedMessage(), ex);
+        }
+        try {
+            session.getBasicRemote().sendText("over");
+        } catch (IOException ex) {
+            RSLogger.wsErrorLogInfo("onMessage send error." + ex.getLocalizedMessage(), ex);
+        }
         return null;
     }
-    
-     @OnError
+
+    @OnError
     public void onError(Session session, Throwable t) {
         common.RSLogger.wsErrorLogInfo("AssignTrial onError" + t.getLocalizedMessage(), new Exception(t));
     }
@@ -52,8 +59,8 @@ public class wsTransfer {
     public void onClose(Session session) {
         //peers.remove(session);
         //common.RSLogger.wsErrorLogInfo(String.format("AssignTrial onClose '%s' close", session.getId()));
-        
-         System.out.println(String.format("AssignTrial onClose '%s' open", session.getId()));
+
+        System.out.println(String.format("AssignTrial onClose '%s' open", session.getId()));
     }
-    
+
 }

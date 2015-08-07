@@ -11,6 +11,7 @@ package webSocket.transfer.utile;
  */
 public class ParamDeployKey {
 
-    public static final String paramKey_rsid="advisory", paramKey_operate="operate", paramKey_uId = "uId", paramKey_relatedId = "relatedId", 
-            paramKey_crMember = "crMember",paramKey_crName="crName",paramKey_crId="crId",paramKey_inviteUId="inviteUId",paramKey_mUId="mUId";
+    public static final String paramKey_rsid = "advisory", paramKey_operate = "operate", paramKey_uId = "uId", paramKey_relatedId = "relatedId",
+            paramKey_crMember = "crMember", paramKey_crName = "crName", paramKey_crId = "crId", paramKey_inviteUId = "inviteUId", paramKey_mUId = "mUId",
+            paramKey_uIdSend = "uIdSend", paramKey_uIdReceive = "uIdReceive", paramKey_message = "message";
 }

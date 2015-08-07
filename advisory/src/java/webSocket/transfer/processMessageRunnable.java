@@ -8,12 +8,13 @@ package webSocket.transfer;
 import common.FormationResult;
 import common.UtileSmart;
 import common.model.ExecuteResultParam;
+import javax.websocket.Session;
 import common.model.ResponseResultCode;
 import webSocket.transfer.utile.wsTransferAnalyzerParam;
 import webSocket.transfer.utile.wsTransferMessageModel;
 import webSocket.transfer.utile.ChatRoomModel;
 import java.util.HashMap;
-import webSocket.WebSocketHelper;
+import net.sf.json.JSONObject;
 import webSocket.transfer.utile.ParamDeployKey;
 
 /**
@@ -26,9 +27,11 @@ public class processMessageRunnable implements Runnable {
     wsTransferAnalyzerParam analyzerParam = new wsTransferAnalyzerParam();
     transferSyncDB syncDB = new transferSyncDB();
     FormationResult formationResult = new FormationResult();
+    Session currentSession;
 
-    public processMessageRunnable(wsTransferMessageModel pMsgModel) {
-        msgModel = pMsgModel;
+    public processMessageRunnable(String strMsg, Session session) throws Exception {
+        msgModel = analyzerParam.wsBaseAnalyzerOperate(strMsg);
+        currentSession = session;
     }
 
     @Override
@@ -46,10 +49,10 @@ public class processMessageRunnable implements Runnable {
                     process_invalidRoom(resultStr);
                     break;
                 case "putMember":
-                    process_putMember();
+                    process_putMember(resultStr);
                     break;
                 case "quitMember":
-                    process_quitMember();
+                    process_quitMember(resultStr);
                     break;
                 case "sendMsg":
                     process_sendMsg();
@@ -81,14 +84,14 @@ public class processMessageRunnable implements Runnable {
         ExecuteResultParam resultParam = syncDB.createRoom(cRoom, msgModel.bodyValues);
         if (resultParam == null || resultParam.ResultCode < 0) {
             //房间创建失败
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate, null);
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
 
         } else {
             transferOrigin.AddChatRoom(cRoom);
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, null);
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
         }
 
-        transferOrigin.SendMsgToChatRoom(cRoom, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), resultStr);
+        transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
 
     }
 
@@ -98,28 +101,97 @@ public class processMessageRunnable implements Runnable {
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
         ChatRoomModel cRoom = new ChatRoomModel();
         //保存房间信息到数据库 获取新的roomId
-        ExecuteResultParam resultParam = syncDB.createRoom(cRoom, msgModel.bodyValues);
+        ExecuteResultParam resultParam = syncDB.invalidRoom(cRoom, msgModel.bodyValues);
         if (resultParam == null || resultParam.ResultCode < 0) {
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate, null);
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
+            transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
+        } else {
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+            transferOrigin.SendMsgToChatRoom(cRoom.crId, resultStr);
+            transferOrigin.RemoveChatRoomBycrId(cRoom.crId);
+        }
+
+    }
+
+    public void process_putMember(String resultStr) throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_crMember, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_inviteUId, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+        ChatRoomModel cRoom = new ChatRoomModel();
+        //保存房间信息到数据库 获取新的roomId
+        ExecuteResultParam resultParam = syncDB.putMember(cRoom, msgModel.bodyValues);
+        if (resultParam == null || resultParam.ResultCode < 0) {
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
+        } else {
+            cRoom = transferOrigin.putChatRoomMembers(cRoom);
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+        }
+
+        transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
+    }
+
+    public void process_quitMember(String resultStr) throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_mUId, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+        ChatRoomModel cRoom = new ChatRoomModel();
+        //保存房间信息到数据库 获取新的roomId
+        ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
+        if (resultParam == null || resultParam.ResultCode < 0) {
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
         } else {
             transferOrigin.RemoveChatRoomBycrId(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId));
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, null);
+            cRoom = transferOrigin.removeChatRoomMembers(cRoom);
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+        }
+        transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
+    }
+
+    public void process_sendMsg() throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdReceive, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_message, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+        String resultStr = null, receiveFlag = null;
+        receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId);
+        if (receiveFlag != null) {
+            //send message to room , 
+            //ChatRoomModel cRoom = new ChatRoomModel();
+            return;
+        }
+        receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive);
+        if (receiveFlag != null) {
+            //send message to single user
+
+            return;
+        }
+
+        ChatRoomModel cRoom = new ChatRoomModel();
+        //保存房间信息到数据库 获取新的roomId
+        ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
+        if (resultParam == null || resultParam.ResultCode < 0) {
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
+        } else {
+            transferOrigin.RemoveChatRoomBycrId(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId));
+            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate);
         }
         transferOrigin.SendMsgToChatRoom(cRoom, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), resultStr);
-    }   
-
-    public void process_putMember() {
-        
-    }
-
-    public void process_quitMember() {
-    }
-
-    public void process_sendMsg() {
 
     }
 
-    public void process_sginIn() {
+    public void process_sginIn() throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+        //openSessions record sgin user
+        transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
+
+        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn()));
 
     }
 

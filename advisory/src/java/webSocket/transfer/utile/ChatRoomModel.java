@@ -6,6 +6,8 @@
 package webSocket.transfer.utile;
 
 import java.util.Set;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  *
@@ -19,6 +21,20 @@ public class ChatRoomModel {
     public String relateId = null;
 
     public Set<ChatRoomMemberModel> crMembers = null;
+
+    public JSONObject toJson() {
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.accumulate("crId", crId);
+        jsonObj.accumulate("crName", crName);
+        jsonObj.accumulate("uId", uId);
+        jsonObj.accumulate("relateId", relateId);
+        JSONArray jsonArr = new JSONArray();
+        for (ChatRoomMemberModel crMember : crMembers) {
+            jsonArr.add(crMember.toJson());
+        }
+        jsonObj.accumulate("members", jsonArr);
+        return jsonObj;
+    }
 
     public void destorySelf() {
         if (crMembers != null) {

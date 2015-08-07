@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import webSocket.AssignTrial;
+import webSocket.transfer.transferOrigin;
+import webSocket.transfer.transferThreadPool;
 
 /**
  *
@@ -35,6 +37,7 @@ public class ReadDeploySetServlet extends HttpServlet {
             common.RSLogger.SetUpLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()));
             common.RSLogger.ErrorLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()), e);
         }
+
         try {
             common.RSLogger.Initial();
         } catch (Exception e) {
@@ -62,6 +65,13 @@ public class ReadDeploySetServlet extends HttpServlet {
         } catch (Exception e) {
             common.RSLogger.SetUpLogInfo(String.format("start service error step initialWebSocketService,%s", e.getLocalizedMessage()));
             common.RSLogger.ErrorLogInfo(String.format("start service error step initialWebSocketService,%s", e.getLocalizedMessage()), e);
+        }
+        try {
+            transferThreadPool.initialTheadPool();
+            transferOrigin.initialChatRooms();
+        } catch (Exception e) {
+            common.RSLogger.SetUpLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()));
+            common.RSLogger.ErrorLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()), e);
         }
 
     }

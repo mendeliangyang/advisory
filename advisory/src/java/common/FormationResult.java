@@ -7,6 +7,7 @@ package common;
 
 import common.model.ExecuteResultParam;
 import common.model.ResponseResultCode;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import webSocket.transfer.utile.ParamDeployKey;
 
@@ -62,14 +63,56 @@ public class FormationResult {
     }
 
     /**
-     * 
+     *
      * @param resultCode
      * @param errorMsg error message
      * @param operate operate
      * @param jsonObj json
-     * @return 
+     * @return
      */
     public String formationWSTransferResult(ResponseResultCode resultCode, String errorMsg, String operate, JSONObject jsonObj) {
+        JSONObject resultJson = new JSONObject();
+        JSONObject resultHeadContext = new JSONObject();
+
+        resultHeadContext.accumulate("resultCode", resultCode.toString());
+        resultHeadContext.accumulate("errMsg", errorMsg);
+        resultHeadContext.accumulate(ParamDeployKey.paramKey_operate, operate);
+
+        resultJson.accumulate("head", resultHeadContext);
+        resultJson.accumulate("body", jsonObj);
+        // if error,log information
+        if (ResponseResultCode.Success != resultCode) {
+            common.RSLogger.wsErrorLogInfo(operate);
+        }
+        return resultJson.toString();
+    }
+
+    public String formationWSTransferResult(ResponseResultCode resultCode, String errorMsg, String operate) {
+        JSONObject resultJson = new JSONObject();
+        JSONObject resultHeadContext = new JSONObject();
+
+        resultHeadContext.accumulate("resultCode", resultCode.toString());
+        resultHeadContext.accumulate("errMsg", errorMsg);
+        resultHeadContext.accumulate(ParamDeployKey.paramKey_operate, operate);
+
+        resultJson.accumulate("head", resultHeadContext);
+        resultJson.accumulate("body", null);
+        // if error,log information
+        if (ResponseResultCode.Success != resultCode) {
+            common.RSLogger.wsErrorLogInfo(operate);
+        }
+        return resultJson.toString();
+    }
+
+    /**
+     *
+     * @param resultCode
+     * @param errorMsg error message
+     * @param operate operate
+     * @param jsonObj json
+     * @return
+     */
+    public String formationWSTransferResult(ResponseResultCode resultCode, String errorMsg, String operate, JSONArray jsonObj) {
         JSONObject resultJson = new JSONObject();
         JSONObject resultHeadContext = new JSONObject();
 
