@@ -85,13 +85,12 @@ public class processMessageRunnable implements Runnable {
         if (resultParam == null || resultParam.ResultCode < 0) {
             //房间创建失败
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
-
+            webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
         } else {
             transferOrigin.AddChatRoom(cRoom);
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+            transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
         }
-
-        transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
 
     }
 
@@ -104,7 +103,7 @@ public class processMessageRunnable implements Runnable {
         ExecuteResultParam resultParam = syncDB.invalidRoom(cRoom, msgModel.bodyValues);
         if (resultParam == null || resultParam.ResultCode < 0) {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
-            transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
+            webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
         } else {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
             transferOrigin.SendMsgToChatRoom(cRoom.crId, resultStr);
@@ -124,12 +123,12 @@ public class processMessageRunnable implements Runnable {
         ExecuteResultParam resultParam = syncDB.putMember(cRoom, msgModel.bodyValues);
         if (resultParam == null || resultParam.ResultCode < 0) {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
+            webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
         } else {
             cRoom = transferOrigin.putChatRoomMembers(cRoom);
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+            transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
         }
-
-        transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
     }
 
     public void process_quitMember(String resultStr) throws Exception {
@@ -142,12 +141,22 @@ public class processMessageRunnable implements Runnable {
         ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
         if (resultParam == null || resultParam.ResultCode < 0) {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
+            webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
         } else {
-            transferOrigin.RemoveChatRoomBycrId(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId));
+            transferOrigin.removeChatRoomMembers(cRoom);
             cRoom = transferOrigin.removeChatRoomMembers(cRoom);
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+            if (cRoom == null) {
+                //task failed 
+                resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, "unkonw error, please contact manager. ", msgModel.operate);
+                webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
+            } else {
+                resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
+                //todo 如果是当前退出的是本人，需要发送消息到本人，如果当前退出的不是本人，需要通知退出的那个人消息。 //根据muid 查找对应的 session发送消息
+                webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
+                transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
+            }
+
         }
-        transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
     }
 
     public void process_sendMsg() throws Exception {

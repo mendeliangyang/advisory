@@ -124,6 +124,7 @@ public class transferSyncDB {
             cRoom.crMembers = new HashSet<ChatRoomMemberModel>();
             crmm = new ChatRoomMemberModel();
             crmm.mUId = UtileSmart.getStringFromMap(mapValues, ParamDeployKey.paramKey_mUId);
+            cRoom.crMembers.add(crmm);
             sqlStr = String.format("update chatRoomMember set quitFlag=2 ,quitDate=getdate() where  crId='%s' and mUId='%s'", cRoom.crId, crmm.mUId);
             resultParam = common.DBHelper.ExecuteSql(ParamDeployKey.paramKey_rsid, sqlStr);
             return resultParam;

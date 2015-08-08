@@ -29,11 +29,14 @@ public class ChatRoomModel {
         jsonObj.accumulate("uId", uId);
         jsonObj.accumulate("relateId", relateId);
         JSONArray jsonArr = new JSONArray();
-        for (ChatRoomMemberModel crMember : crMembers) {
-            jsonArr.add(crMember.toJson());
+        if (crMembers != null) {
+            for (ChatRoomMemberModel crMember : crMembers) {
+                jsonArr.add(crMember.toJson());
+            }
         }
         jsonObj.accumulate("members", jsonArr);
         return jsonObj;
+
     }
 
     public void destorySelf() {
