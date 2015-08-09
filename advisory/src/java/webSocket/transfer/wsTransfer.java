@@ -15,8 +15,7 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import common.RSLogger;
 import common.model.ResponseResultCode;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import webSocket.transfer.utile.ADUserModel;
 
 /**
  *
@@ -57,11 +56,9 @@ public class wsTransfer {
         //peers.add(session);
         //common.RSLogger.LogInfo(String.format("AssignTrial onOpen '%s' open", session.getId()));
         transferOrigin.openSesions.add(session);
-        try {
-            webSocket.WebSocketHelper.asyncSendTextToClient(session, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, "onlineUser", transferOrigin.getCurrentOnlineUserDetail()));
-        } catch (IOException ex) {
-            RSLogger.wsErrorLogInfo("send online user error"+ex.getLocalizedMessage(), ex);
-        }
+
+        webSocket.WebSocketHelper.asyncSendTextToClient(session, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_getOnlineUser, transferOrigin.getCurrentOnlineUserDetail()));
+
         System.out.println(String.format("AssignTrial onOpen '%s' open", session.getId()));
     }
 
@@ -69,7 +66,8 @@ public class wsTransfer {
     public void onClose(Session session) {
         //peers.remove(session);
         //common.RSLogger.wsErrorLogInfo(String.format("AssignTrial onClose '%s' close", session.getId()));
-
+        ADUserModel userModel = transferOrigin.removeVerifySessionBySessionId(session.getId());
+        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Error, null, wsTransferOperateDefinite.Operate_signOutNotify, userModel.toJson()));
         System.out.println(String.format("AssignTrial onClose '%s' open", session.getId()));
     }
 

@@ -14,6 +14,7 @@ import webSocket.transfer.utile.wsTransferAnalyzerParam;
 import webSocket.transfer.utile.wsTransferMessageModel;
 import webSocket.transfer.utile.ChatRoomModel;
 import java.util.HashMap;
+import webSocket.transfer.utile.ADUserModel;
 import webSocket.transfer.utile.ParamDeployKey;
 
 /**
@@ -21,18 +22,18 @@ import webSocket.transfer.utile.ParamDeployKey;
  * @author Administrator
  */
 public class processMessageRunnable implements Runnable {
-    
+
     wsTransferMessageModel msgModel = null;
     wsTransferAnalyzerParam analyzerParam = new wsTransferAnalyzerParam();
     transferSyncDB syncDB = new transferSyncDB();
     FormationResult formationResult = new FormationResult();
     Session currentSession;
-    
+
     public processMessageRunnable(String strMsg, Session session) throws Exception {
         msgModel = analyzerParam.wsBaseAnalyzerOperate(strMsg);
         currentSession = session;
     }
-    
+
     @Override
     public void run() {
         if (msgModel == null) {
@@ -41,26 +42,26 @@ public class processMessageRunnable implements Runnable {
         String resultStr = null;
         try {
             switch (msgModel.operate) {
-                case "createRoom":
+                case wsTransferOperateDefinite.Operate_createRoom:
                     proess_createRoom(resultStr);
                     break;
-                case "invalidRoom":
+                case wsTransferOperateDefinite.Operate_invalidRoom:
                     process_invalidRoom(resultStr);
                     break;
-                case "putMember":
+                case wsTransferOperateDefinite.Operate_putMember:
                     process_putMember(resultStr);
                     break;
-                case "quitMember":
+                case wsTransferOperateDefinite.Operate_quitMember:
                     process_quitMember(resultStr);
                     break;
-                case "sendMsg":
+                case wsTransferOperateDefinite.Operate_sendMsg:
                     process_sendMsg();
                     break;
-                case "sginIn":
+                case wsTransferOperateDefinite.Operate_signIn:
                     process_sginIn();
                     break;
-                case "sginOut":
-                    process_sendMsg();
+                case wsTransferOperateDefinite.Operate_signOut:
+                    //process_sendMsg();
                     break;
                 default:
                     break;
@@ -68,9 +69,9 @@ public class processMessageRunnable implements Runnable {
         } catch (Exception ex) {
             common.RSLogger.wsErrorLogInfo(ex.getLocalizedMessage(), ex);
         }
-        
+
     }
-    
+
     private void proess_createRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
@@ -90,9 +91,9 @@ public class processMessageRunnable implements Runnable {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
             transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
         }
-        
+
     }
-    
+
     private void process_invalidRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -108,9 +109,9 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(cRoom.crId, resultStr);
             transferOrigin.RemoveChatRoomBycrId(cRoom.crId);
         }
-        
+
     }
-    
+
     private void process_putMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -129,7 +130,7 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
         }
     }
-    
+
     private void process_quitMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_mUId, null);
@@ -163,10 +164,10 @@ public class processMessageRunnable implements Runnable {
                 //发送消息到房间其他人
                 transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
             }
-            
+
         }
     }
-    
+
     private void process_sendMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
@@ -187,7 +188,7 @@ public class processMessageRunnable implements Runnable {
 
             return;
         }
-        
+
         ChatRoomModel cRoom = new ChatRoomModel();
         //保存房间信息到数据库 获取新的roomId
         ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
@@ -198,25 +199,28 @@ public class processMessageRunnable implements Runnable {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate);
         }
         transferOrigin.SendMsgToChatRoom(cRoom, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), resultStr);
-        
+
     }
-    
+
     private void process_sginIn() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
         //openSessions record sgin user
-        transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
-        
+        ADUserModel userModel = transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
+
         webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_mUId))));
-        
+
+        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Error, null, wsTransferOperateDefinite.Operate_signInNotify, userModel.toJson()));
     }
-    
-    private void process_currentUser(){
-        
-    }
-    
-    private void process_sginOut() {
-        
+
+    private void process_sginOut() throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+        //verifySession中的信息
+        if (transferOrigin.removeVerifySessionByUId(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId))) {
+            //transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signOut, transferOrigin.(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_mUId)));
+        }
     }
 }

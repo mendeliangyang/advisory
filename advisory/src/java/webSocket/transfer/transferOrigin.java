@@ -35,10 +35,15 @@ public class transferOrigin {
     //两个session 队列。一个open添加的队列
     public final static Set<Session> openSesions = Collections.synchronizedSet(new HashSet<Session>());
     //不考虑这种情况，等连接都认为登陆成功 一个 signIn 验证的队列 。openSession验证通过就会在openSession中移除该队列然后添加到 signIn队列
-    public final static Map<ADUserModel, Session> verifySessions = Collections.synchronizedMap(new HashMap<ADUserModel, Session>());
+    public final static Set<ADUserModel> verifySessions = Collections.synchronizedSet(new HashSet<ADUserModel>());
     //当前房间的集合
     public final static Set<ChatRoomModel> chatRooms = Collections.synchronizedSet(new HashSet<ChatRoomModel>());
 
+    /**
+     * 初始化 ，聊天系统在，开始工作前，在数据库中获取已经存在的房间信息
+     *
+     * @throws Exception
+     */
     public static void initialChatRooms() throws Exception {
         //查询当房间信息保存到 chatRooms
         Connection conn = null;
@@ -86,14 +91,25 @@ public class transferOrigin {
         }
     }
 
+    /**
+     * 获取当前在线成员信息
+     *
+     * @return
+     */
     public static JSONArray getCurrentOnlineUserDetail() {
         JSONArray jsonArray = new JSONArray();
-        for (ADUserModel keySet : verifySessions.keySet()) {
+        for (ADUserModel keySet : verifySessions) {
             jsonArray.add(keySet.toJson());
         }
         return jsonArray;
     }
 
+    /**
+     * get user detail from db
+     *
+     * @param uId
+     * @return
+     */
     public static ADUserModel getUserDetailFromDB(String uId) {
         Connection conn = null;
         Statement stmt = null;
@@ -128,6 +144,11 @@ public class transferOrigin {
 
     }
 
+    /**
+     * transform all chatRooms to jsonArray
+     *
+     * @return
+     */
     public static JSONArray getChatRoomsJosn() {
         JSONArray jsonArray = new JSONArray();
         for (ChatRoomModel chatRoom : chatRooms) {
@@ -136,6 +157,12 @@ public class transferOrigin {
         return jsonArray;
     }
 
+    /**
+     * get chatRooms json by memberId
+     *
+     * @param uId
+     * @return
+     */
     public static JSONArray getChatRoomsJosn(String uId) {
         JSONArray jsonArray = new JSONArray();
         for (ChatRoomModel chatRoom : chatRooms) {
@@ -149,37 +176,80 @@ public class transferOrigin {
         return jsonArray;
     }
 
-    public static boolean addVerifySession(String key, Session session) {
+    /**
+     * signIn and send uid , add it to verifySession queue
+     *
+     * @param key
+     * @param session
+     * @return
+     */
+    public static ADUserModel addVerifySession(String key, Session session) {
         ADUserModel userModel = getUserDetailFromDB(key);
         if (userModel == null) {
             //get userInfomation error.
-            return false;
+            return null;
         }
+        userModel.session = session;
         synchronized (verifySessions) {
-            verifySessions.put(userModel, session);
+            verifySessions.add(userModel);
         }
-        return true;
+        return userModel;
     }
 
-    public static void removeVerifySession(String key) {
+    /**
+     * sign out ,remove it from verifySession queue
+     *
+     * @param uId
+     */
+    public static boolean removeVerifySessionByUId(String uId) {
         synchronized (verifySessions) {
-            Iterator keyIterator = verifySessions.keySet().iterator();
+            Iterator keyIterator = verifySessions.iterator();
             while (keyIterator.hasNext()) {
                 ADUserModel next = (ADUserModel) keyIterator.next();
-                if (next.uId.equals(key)) {
+                if (next.uId.equals(uId)) {
                     verifySessions.remove(next);
-                    break;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
+    /**
+     * sign out ,remove it from verifySession queue
+     *
+     * @param SessionId
+     */
+    public static ADUserModel removeVerifySessionBySessionId(String SessionId) {
+        synchronized (verifySessions) {
+            Iterator keyIterator = verifySessions.iterator();
+            while (keyIterator.hasNext()) {
+                ADUserModel next = (ADUserModel) keyIterator.next();
+                if (next.session.getId().equals(SessionId)) {
+                    verifySessions.remove(next);
+                    return next;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 添加新的房间信息
+     *
+     * @param room
+     */
     public static void AddChatRoom(ChatRoomModel room) {
         synchronized (chatRooms) {
             chatRooms.add(room);
         }
     }
 
+    /**
+     * remove chatRoom from chatRooms by chatRoomID
+     *
+     * @param crid
+     */
     public static void RemoveChatRoomBycrId(String crid) {
         ChatRoomModel tempRoom = null;
         for (ChatRoomModel chatRoom : chatRooms) {
@@ -198,24 +268,42 @@ public class transferOrigin {
         tempRoom = null;
     }
 
+    /**
+     * get session from verifySession by uId
+     *
+     * @param uId
+     * @return
+     */
     public static Session getVerifySessionByUId(String uId) {
-        for (ADUserModel keySet : verifySessions.keySet()) {
+        for (ADUserModel keySet : verifySessions) {
             if (keySet.uId.equals(uId)) {
-                return verifySessions.get(keySet);
+                return keySet.session;
             }
         }
         return null;
     }
 
+    /**
+     * get session from verifySession by chatRoomMember
+     *
+     * @param member
+     * @return
+     */
     public static Session getVerifySessionByChatRoomMember(ChatRoomMemberModel member) {
-        for (ADUserModel keySet : verifySessions.keySet()) {
+        for (ADUserModel keySet : verifySessions) {
             if (keySet.uId.equals(member.mUId)) {
-                return member.session = verifySessions.get(keySet);
+                return member.session = keySet.session;
             }
         }
         return null;
     }
 
+    /**
+     * put chatRoom member
+     *
+     * @param roomModel
+     * @return
+     */
     public static ChatRoomModel putChatRoomMembers(ChatRoomModel roomModel) {
         if (roomModel == null || roomModel.crMembers == null || roomModel.crMembers.isEmpty()) {
             return null;
@@ -352,11 +440,17 @@ public class transferOrigin {
         if (uId == null) {
             return;
         }
-        for (ADUserModel keySet : verifySessions.keySet()) {
+        for (ADUserModel keySet : verifySessions) {
             if (keySet.uId.equals(uId)) {
-                WebSocketHelper.asyncSendTextToClient((Session) verifySessions.get(keySet), message);
+                WebSocketHelper.asyncSendTextToClient(keySet.session, message);
                 break;
             }
+        }
+    }
+
+    public static void broadMsgToVerifySession(String message) {
+        for (ADUserModel verifySession : verifySessions) {
+            WebSocketHelper.asyncSendTextToClient(verifySession.session, message);
         }
     }
 

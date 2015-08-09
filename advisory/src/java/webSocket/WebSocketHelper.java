@@ -24,7 +24,7 @@ public class WebSocketHelper {
         return false;
     }
 
-    public static boolean asyncSendTextToClient(Session session, String strMsg) throws IOException {
+    public static boolean asyncSendTextToClient(Session session, String strMsg) {
         if (session.isOpen()) {
             session.getAsyncRemote().sendText(strMsg);
             return true;
