@@ -5,6 +5,7 @@
  */
 package webSocket.transfer;
 
+import common.FormationResult;
 import java.io.IOException;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -13,6 +14,9 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import common.RSLogger;
+import common.model.ResponseResultCode;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,6 +29,7 @@ public class wsTransfer {
         //  读取数据信息到 chatRooms
 
     }
+    FormationResult formationResult = new FormationResult();
 
     @OnMessage
     public String onMessage(Session session, String message) {
@@ -52,6 +57,11 @@ public class wsTransfer {
         //peers.add(session);
         //common.RSLogger.LogInfo(String.format("AssignTrial onOpen '%s' open", session.getId()));
         transferOrigin.openSesions.add(session);
+        try {
+            webSocket.WebSocketHelper.asyncSendTextToClient(session, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, "onlineUser", transferOrigin.getCurrentOnlineUserDetail()));
+        } catch (IOException ex) {
+            RSLogger.wsErrorLogInfo("send online user error"+ex.getLocalizedMessage(), ex);
+        }
         System.out.println(String.format("AssignTrial onOpen '%s' open", session.getId()));
     }
 

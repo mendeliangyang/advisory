@@ -5,12 +5,26 @@
  */
 package webSocket.transfer.utile;
 
+import net.sf.json.JSONObject;
+
 /**
  *
  * @author Administrator
  */
 public class ADUserModel {
-    
-    public String uId=null;
-    
+
+    public String uId = null;
+    public String uType = null;
+    public String uBranch = null;
+    public String uNickName = null;
+
+    public JSONObject toJson() {
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.accumulate("uId", uId);
+        jsonObj.accumulate("uType", uType);
+        jsonObj.accumulate("uBranch", uBranch);
+        jsonObj.accumulate("uNickName", uNickName);
+        return jsonObj;
+    }
+
 }

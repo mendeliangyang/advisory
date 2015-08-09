@@ -71,7 +71,7 @@ public class processMessageRunnable implements Runnable {
         
     }
     
-    public void proess_createRoom(String resultStr) throws Exception {
+    private void proess_createRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crName, null);
@@ -93,7 +93,7 @@ public class processMessageRunnable implements Runnable {
         
     }
     
-    public void process_invalidRoom(String resultStr) throws Exception {
+    private void process_invalidRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
@@ -111,7 +111,7 @@ public class processMessageRunnable implements Runnable {
         
     }
     
-    public void process_putMember(String resultStr) throws Exception {
+    private void process_putMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crMember, null);
@@ -130,7 +130,7 @@ public class processMessageRunnable implements Runnable {
         }
     }
     
-    public void process_quitMember(String resultStr) throws Exception {
+    private void process_quitMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_mUId, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
@@ -167,7 +167,7 @@ public class processMessageRunnable implements Runnable {
         }
     }
     
-    public void process_sendMsg() throws Exception {
+    private void process_sendMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdReceive, null);
@@ -201,7 +201,7 @@ public class processMessageRunnable implements Runnable {
         
     }
     
-    public void process_sginIn() throws Exception {
+    private void process_sginIn() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
@@ -212,7 +212,11 @@ public class processMessageRunnable implements Runnable {
         
     }
     
-    public void process_sginOut() {
+    private void process_currentUser(){
+        
+    }
+    
+    private void process_sginOut() {
         
     }
 }

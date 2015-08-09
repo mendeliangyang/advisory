@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.websocket.Session;
 import net.sf.json.JSONArray;
 import webSocket.WebSocketHelper;
+import webSocket.transfer.utile.ADUserModel;
 import webSocket.transfer.utile.ChatRoomMemberModel;
 import webSocket.transfer.utile.ParamDeployKey;
 
@@ -34,7 +35,7 @@ public class transferOrigin {
     //两个session 队列。一个open添加的队列
     public final static Set<Session> openSesions = Collections.synchronizedSet(new HashSet<Session>());
     //不考虑这种情况，等连接都认为登陆成功 一个 signIn 验证的队列 。openSession验证通过就会在openSession中移除该队列然后添加到 signIn队列
-    public final static Map<String, Session> verifySessions = Collections.synchronizedMap(new HashMap<String, Session>());
+    public final static Map<ADUserModel, Session> verifySessions = Collections.synchronizedMap(new HashMap<ADUserModel, Session>());
     //当前房间的集合
     public final static Set<ChatRoomModel> chatRooms = Collections.synchronizedSet(new HashSet<ChatRoomModel>());
 
@@ -85,6 +86,48 @@ public class transferOrigin {
         }
     }
 
+    public static JSONArray getCurrentOnlineUserDetail() {
+        JSONArray jsonArray = new JSONArray();
+        for (ADUserModel keySet : verifySessions.keySet()) {
+            jsonArray.add(keySet.toJson());
+        }
+        return jsonArray;
+    }
+
+    public static ADUserModel getUserDetailFromDB(String uId) {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet result = null;
+        ADUserModel userModel = null;
+        try {
+            if (uId == null || uId.isEmpty()) {
+                return null;
+            }
+            conn = DBHelper.ConnectSybase(ParamDeployKey.paramKey_rsid);
+            stmt = conn.createStatement();
+            result = stmt.executeQuery(String.format("SELECT uId,uType,uBranch,uNickName FROM dbo.AdUser where uId = '%s'", uId));
+            if (result.next()) {
+                userModel = new ADUserModel();
+                userModel.uId = result.getString("uId");
+                userModel.uBranch = result.getString("uBranch");
+                userModel.uNickName = result.getString("uNickName");
+                userModel.uType = result.getString("uType");
+            }
+            result.close();
+            result = null;
+            return userModel;
+        } catch (SQLException e) {
+            RSLogger.wsErrorLogInfo("get user Infomation from db error" + e.getLocalizedMessage());
+            return null;
+        } catch (Exception ex) {
+            RSLogger.wsErrorLogInfo("get dbConnection from dbPool error" + ex.getLocalizedMessage());
+            return null;
+        } finally {
+            DBHelper.CloseConnection(result, stmt, conn);
+        }
+
+    }
+
     public static JSONArray getChatRoomsJosn() {
         JSONArray jsonArray = new JSONArray();
         for (ChatRoomModel chatRoom : chatRooms) {
@@ -106,15 +149,28 @@ public class transferOrigin {
         return jsonArray;
     }
 
-    public static void addVerifySession(String key, Session session) {
-        synchronized (verifySessions) {
-            verifySessions.put(key, session);
+    public static boolean addVerifySession(String key, Session session) {
+        ADUserModel userModel = getUserDetailFromDB(key);
+        if (userModel == null) {
+            //get userInfomation error.
+            return false;
         }
+        synchronized (verifySessions) {
+            verifySessions.put(userModel, session);
+        }
+        return true;
     }
 
     public static void removeVerifySession(String key) {
         synchronized (verifySessions) {
-            verifySessions.remove(key);
+            Iterator keyIterator = verifySessions.keySet().iterator();
+            while (keyIterator.hasNext()) {
+                ADUserModel next = (ADUserModel) keyIterator.next();
+                if (next.uId.equals(key)) {
+                    verifySessions.remove(next);
+                    break;
+                }
+            }
         }
     }
 
@@ -143,8 +199,8 @@ public class transferOrigin {
     }
 
     public static Session getVerifySessionByUId(String uId) {
-        for (String keySet : verifySessions.keySet()) {
-            if (keySet.equals(uId)) {
+        for (ADUserModel keySet : verifySessions.keySet()) {
+            if (keySet.uId.equals(uId)) {
                 return verifySessions.get(keySet);
             }
         }
@@ -152,8 +208,8 @@ public class transferOrigin {
     }
 
     public static Session getVerifySessionByChatRoomMember(ChatRoomMemberModel member) {
-        for (String keySet : verifySessions.keySet()) {
-            if (keySet.equals(member.mUId)) {
+        for (ADUserModel keySet : verifySessions.keySet()) {
+            if (keySet.uId.equals(member.mUId)) {
                 return member.session = verifySessions.get(keySet);
             }
         }
@@ -296,8 +352,8 @@ public class transferOrigin {
         if (uId == null) {
             return;
         }
-        for (String keySet : verifySessions.keySet()) {
-            if (keySet.equals(uId)) {
+        for (ADUserModel keySet : verifySessions.keySet()) {
+            if (keySet.uId.equals(uId)) {
                 WebSocketHelper.asyncSendTextToClient((Session) verifySessions.get(keySet), message);
                 break;
             }
