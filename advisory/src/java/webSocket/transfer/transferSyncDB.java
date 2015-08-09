@@ -5,11 +5,9 @@
  */
 package webSocket.transfer;
 
-import com.sun.javafx.scene.control.skin.VirtualFlow;
 import java.util.Map;
 import common.UtileSmart;
 import common.model.ExecuteResultParam;
-import common.model.ResponseResultCode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

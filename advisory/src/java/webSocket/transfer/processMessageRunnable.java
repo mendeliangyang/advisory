@@ -14,7 +14,6 @@ import webSocket.transfer.utile.wsTransferAnalyzerParam;
 import webSocket.transfer.utile.wsTransferMessageModel;
 import webSocket.transfer.utile.ChatRoomModel;
 import java.util.HashMap;
-import net.sf.json.JSONObject;
 import webSocket.transfer.utile.ParamDeployKey;
 
 /**
@@ -22,18 +21,18 @@ import webSocket.transfer.utile.ParamDeployKey;
  * @author Administrator
  */
 public class processMessageRunnable implements Runnable {
-
+    
     wsTransferMessageModel msgModel = null;
     wsTransferAnalyzerParam analyzerParam = new wsTransferAnalyzerParam();
     transferSyncDB syncDB = new transferSyncDB();
     FormationResult formationResult = new FormationResult();
     Session currentSession;
-
+    
     public processMessageRunnable(String strMsg, Session session) throws Exception {
         msgModel = analyzerParam.wsBaseAnalyzerOperate(strMsg);
         currentSession = session;
     }
-
+    
     @Override
     public void run() {
         if (msgModel == null) {
@@ -69,9 +68,9 @@ public class processMessageRunnable implements Runnable {
         } catch (Exception ex) {
             common.RSLogger.wsErrorLogInfo(ex.getLocalizedMessage(), ex);
         }
-
+        
     }
-
+    
     public void proess_createRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
@@ -91,9 +90,9 @@ public class processMessageRunnable implements Runnable {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
             transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
         }
-
+        
     }
-
+    
     public void process_invalidRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -109,9 +108,9 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(cRoom.crId, resultStr);
             transferOrigin.RemoveChatRoomBycrId(cRoom.crId);
         }
-
+        
     }
-
+    
     public void process_putMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -130,10 +129,11 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
         }
     }
-
+    
     public void process_quitMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_mUId, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
         ChatRoomModel cRoom = new ChatRoomModel();
@@ -151,14 +151,22 @@ public class processMessageRunnable implements Runnable {
                 webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
             } else {
                 resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
-                //todo 如果是当前退出的是本人，需要发送消息到本人，如果当前退出的不是本人，需要通知退出的那个人消息。 //根据muid 查找对应的 session发送消息
-                webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
+                //如果是当前退出的是本人，需要发送消息到本人，如果当前退出的不是本人，需要通知退出的那个人消息。 //根据muid 查找对应的 session发送消息
+                if (UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId).equals(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_mUId))) {
+                    //发送消息到本人
+                    webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, resultStr);
+                } else {
+                    //发送消息到指定用户
+                    transferOrigin.SendMsgToSpecial(ParamDeployKey.paramKey_mUId, resultStr);
+                }
+
+                //发送消息到房间其他人
                 transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
             }
-
+            
         }
     }
-
+    
     public void process_sendMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
@@ -179,7 +187,7 @@ public class processMessageRunnable implements Runnable {
 
             return;
         }
-
+        
         ChatRoomModel cRoom = new ChatRoomModel();
         //保存房间信息到数据库 获取新的roomId
         ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
@@ -190,21 +198,21 @@ public class processMessageRunnable implements Runnable {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate);
         }
         transferOrigin.SendMsgToChatRoom(cRoom, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), resultStr);
-
+        
     }
-
+    
     public void process_sginIn() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
         //openSessions record sgin user
         transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
-
-        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn()));
-
+        
+        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_mUId))));
+        
     }
-
+    
     public void process_sginOut() {
-
+        
     }
 }

@@ -93,6 +93,19 @@ public class transferOrigin {
         return jsonArray;
     }
 
+    public static JSONArray getChatRoomsJosn(String uId) {
+        JSONArray jsonArray = new JSONArray();
+        for (ChatRoomModel chatRoom : chatRooms) {
+            for (ChatRoomMemberModel crMember : chatRoom.crMembers) {
+                if (crMember.mUId.equals(uId)) {
+                    jsonArray.add(chatRoom.toJson());
+                    break;
+                }
+            }
+        }
+        return jsonArray;
+    }
+
     public static void addVerifySession(String key, Session session) {
         synchronized (verifySessions) {
             verifySessions.put(key, session);
@@ -277,6 +290,18 @@ public class transferOrigin {
             WebSocketHelper.asyncSendTextToClient(member.session, message);
         }
 
+    }
+
+    public static void SendMsgToSpecial(String uId, String message) throws IOException {
+        if (uId == null) {
+            return;
+        }
+        for (String keySet : verifySessions.keySet()) {
+            if (keySet.equals(uId)) {
+                WebSocketHelper.asyncSendTextToClient((Session) verifySessions.get(keySet), message);
+                break;
+            }
+        }
     }
 
 }
