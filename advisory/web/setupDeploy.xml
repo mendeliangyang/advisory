@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deploy>
     <systemSet id="ReviveSmartDB">
-        <dbAddress>220.231.153.66</dbAddress>
+        <dbAddress>192.168.169.217</dbAddress>
         <dbPort>5000</dbPort>
         <dbName>ReviveSmartDB</dbName>
         <dbUser>sa</dbUser>
         <dbpwd>123456</dbpwd>
     </systemSet>
     <systemSet id="advisory">
-        <dbAddress>220.231.153.66</dbAddress>
+        <dbAddress>192.168.169.217</dbAddress>
         <dbPort>5000</dbPort>
-        <dbName>model</dbName>
+        <dbName>advisory</dbName>
         <dbUser>sa</dbUser>
         <dbpwd>123456</dbpwd>
     </systemSet>

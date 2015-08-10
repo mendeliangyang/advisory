@@ -15,7 +15,8 @@ public class wsTransferOperateDefinite {
     public static final String Operate_invalidRoom = "invalidRoom";
     public static final String Operate_putMember = "putMember";
     public static final String Operate_quitMember = "quitMember";
-    public static final String Operate_sendMsg = "sendMsg";
+    public static final String Operate_sendRoomMsg = "sendRoomMsg";
+    public static final String Operate_sendSingleMsg = "sendSingleMsg";
     public static final String Operate_signIn = "signIn";
     public static final String Operate_signOut = "signOut";
 

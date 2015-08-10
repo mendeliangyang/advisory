@@ -28,7 +28,23 @@ public class transferThreadPool {
         processMessagePool.execute(run);
     }
 
-    public static void saveDataPoolExecute(Runnable run) {
+    public static void saveSingleMessageExecute(String uIdReceive, String uIdSend, String message) {
+        Runnable run = new Runnable() {
+            @Override
+            public void run() {
+                transferSyncDB.saveSingleMessage(uIdReceive, uIdSend, message);
+            }
+        };
+        saveDataPool.execute(run);
+    }
+
+    public static void saveRoomMessageExecute(String uIdReceive, String uIdSend, String message) {
+        Runnable run = new Runnable() {
+            @Override
+            public void run() {
+                transferSyncDB.saveRoomMessage(uIdReceive, uIdSend, message);
+            }
+        };
         saveDataPool.execute(run);
     }
 

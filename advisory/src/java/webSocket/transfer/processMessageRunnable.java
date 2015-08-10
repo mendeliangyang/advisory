@@ -54,8 +54,11 @@ public class processMessageRunnable implements Runnable {
                 case wsTransferOperateDefinite.Operate_quitMember:
                     process_quitMember(resultStr);
                     break;
-                case wsTransferOperateDefinite.Operate_sendMsg:
-                    process_sendMsg();
+                case wsTransferOperateDefinite.Operate_sendRoomMsg:
+                    process_sendRoomMsg();
+                    break;
+                case wsTransferOperateDefinite.Operate_sendSingleMsg:
+                    process_sendSingleMsg();
                     break;
                 case wsTransferOperateDefinite.Operate_signIn:
                     process_sginIn();
@@ -178,13 +181,15 @@ public class processMessageRunnable implements Runnable {
         String resultStr = null, receiveFlag = null;
         receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId);
         if (receiveFlag != null) {
-            //send message to room , 
+            //send message to room ,
+            //save messae to db
             //ChatRoomModel cRoom = new ChatRoomModel();
             return;
         }
         receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive);
         if (receiveFlag != null) {
-            //send message to single user
+            //first send message to single user
+            //second save message to db
 
             return;
         }
@@ -209,9 +214,9 @@ public class processMessageRunnable implements Runnable {
         //openSessions record sgin user
         ADUserModel userModel = transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
 
-        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_mUId))));
+        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId))));
 
-        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Error, null, wsTransferOperateDefinite.Operate_signInNotify, userModel.toJson()));
+        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signInNotify, userModel.toJson()));
     }
 
     private void process_sginOut() throws Exception {

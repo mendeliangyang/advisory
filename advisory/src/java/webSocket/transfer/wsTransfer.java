@@ -6,7 +6,6 @@
 package webSocket.transfer;
 
 import common.FormationResult;
-import java.io.IOException;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -38,11 +37,6 @@ public class wsTransfer {
         } catch (Exception ex) {
             RSLogger.wsErrorLogInfo("onMessage process error." + ex.getLocalizedMessage(), ex);
         }
-        try {
-            session.getBasicRemote().sendText("over");
-        } catch (IOException ex) {
-            RSLogger.wsErrorLogInfo("onMessage send error." + ex.getLocalizedMessage(), ex);
-        }
         return null;
     }
 
@@ -67,7 +61,7 @@ public class wsTransfer {
         //peers.remove(session);
         //common.RSLogger.wsErrorLogInfo(String.format("AssignTrial onClose '%s' close", session.getId()));
         ADUserModel userModel = transferOrigin.removeVerifySessionBySessionId(session.getId());
-        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Error, null, wsTransferOperateDefinite.Operate_signOutNotify, userModel.toJson()));
+        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signOutNotify, userModel.toJson()));
         System.out.println(String.format("AssignTrial onClose '%s' open", session.getId()));
     }
 

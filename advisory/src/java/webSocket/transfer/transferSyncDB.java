@@ -131,4 +131,30 @@ public class transferSyncDB {
         }
     }
 
+    public static ExecuteResultParam saveSingleMessage(String uIdReceive, String uIdSend, String message) {
+        ExecuteResultParam resultParam = null;
+        String sqlStr = null;
+        try {
+            sqlStr = String.format("insert into chatSingleMessage(uIdReceive,uIdSend,dateSend,message) values('%s','%s',getdate(),'%s')", uIdReceive, uIdSend, message);
+            resultParam = common.DBHelper.ExecuteSql(ParamDeployKey.paramKey_rsid, sqlStr);
+            return resultParam;
+        } finally {
+            UtileSmart.FreeObjects(resultParam, sqlStr);
+        }
+    }
+    
+    public static ExecuteResultParam saveRoomMessage(String uIdReceive, String uIdSend, String message) {
+        ExecuteResultParam resultParam = null;
+        String sqlStr = null;
+        try {
+            sqlStr = String.format("insert into chatMessage (crId,uIdSend,dateSend,message)values('%s','%s',getdate(),'%s')", uIdReceive, uIdSend, message);
+            resultParam = common.DBHelper.ExecuteSql(ParamDeployKey.paramKey_rsid, sqlStr);
+            return resultParam;
+        } finally {
+            UtileSmart.FreeObjects(resultParam, sqlStr);
+        }
+    }
+    
+    
+
 }
