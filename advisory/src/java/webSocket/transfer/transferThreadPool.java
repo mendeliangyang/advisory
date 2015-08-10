@@ -21,6 +21,7 @@ public class transferThreadPool {
         processMessagePool = Executors.newCachedThreadPool();// Executors.newFixedThreadPool(10);//
         saveDataPool = Executors.newFixedThreadPool(4);
         //wsSingleThreadWrite = Executors.newSingleThreadExecutor();
+        common.RSLogger.SetUpLogInfo("transfer websocket service initial success.");
         return true;
     }
 
@@ -38,11 +39,11 @@ public class transferThreadPool {
         saveDataPool.execute(run);
     }
 
-    public static void saveRoomMessageExecute(String uIdReceive, String uIdSend, String message) {
+    public static void saveRoomMessageExecute(String crId, String uIdSend, String message) {
         Runnable run = new Runnable() {
             @Override
             public void run() {
-                transferSyncDB.saveRoomMessage(uIdReceive, uIdSend, message);
+                transferSyncDB.saveRoomMessage(crId, uIdSend, message);
             }
         };
         saveDataPool.execute(run);

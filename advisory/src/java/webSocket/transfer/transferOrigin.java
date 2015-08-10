@@ -55,8 +55,9 @@ public class transferOrigin {
             conn = DBHelper.ConnectSybase(ParamDeployKey.paramKey_rsid);
             stmt = conn.createStatement();
             result = stmt.executeQuery("SELECT * FROM chatRoom");
-            crm = new ChatRoomModel();
+
             while (result.next()) {
+                crm = new ChatRoomModel();
                 crm.crId = result.getString("crId");
                 crm.crName = result.getString("crName");
                 crm.uId = result.getString("uId");
@@ -80,9 +81,12 @@ public class transferOrigin {
                 result.close();
                 result = null;
             }
-            result.close();
-            result = null;
+            if (result != null) {
 
+                result.close();
+                result = null;
+            }
+            common.RSLogger.SetUpLogInfo("transfer websocket service read chatRoom detail success.");
         } catch (SQLException e) {
             RSLogger.ErrorLogInfo("initialChatRooms error" + e.getLocalizedMessage());
 

@@ -70,8 +70,8 @@ public class ReadDeploySetServlet extends HttpServlet {
             transferThreadPool.initialTheadPool();
             transferOrigin.initialChatRooms();
         } catch (Exception e) {
-            common.RSLogger.SetUpLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()));
-            common.RSLogger.ErrorLogInfo(String.format("start service error step initialCachedTheadPool ,%s", e.getLocalizedMessage()), e);
+            common.RSLogger.SetUpLogInfo(String.format("start service error step initial webSocketTransfer ,%s", e.getLocalizedMessage()));
+            common.RSLogger.ErrorLogInfo(String.format("start service error step initial webSocketTransfer ,%s", e.getLocalizedMessage()), e);
         }
 
     }

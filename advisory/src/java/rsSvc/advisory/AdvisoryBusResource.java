@@ -198,7 +198,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("subMitQ")
     public String subMitQ(String param) {
-        String paramKey_uId = "uId", paramKey_qTitle = "qTitle";
+        String paramKey_uId = "uId", paramKey_qTitle = "qTitle", paramKey_specialSovleUId = "specialSovleUId";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, qId = null;
         Map<String, Object> paramMap = null;
@@ -208,13 +208,14 @@ public class AdvisoryBusResource {
 
             paramMap.put(paramKey_uId, null);
             paramMap.put(paramKey_qTitle, null);
+            paramMap.put(paramKey_specialSovleUId, null);
 
             advisoryAnalyzeParam.AnalyzeParamBodyToMap(param, paramMap);
             qId = common.UtileSmart.getUUID();
-            sqlStr = String.format("insert into question (qId,qTitle,qPutDate,uId) values ('%s','%s',getdate(),'%s')",
+            sqlStr = String.format("insert into question (qId,qTitle,qPutDate,uId,specialSovleUId) values ('%s','%s',getdate(),'%s','%s')",
                     qId,
                     UtileSmart.getStringFromMap(paramMap, paramKey_qTitle),
-                    UtileSmart.getStringFromMap(paramMap, paramKey_uId));
+                    UtileSmart.getStringFromMap(paramMap, paramKey_uId), UtileSmart.tryGetStringFromMap(paramMap, paramKey_specialSovleUId));
             resultParam = DBHelper.ExecuteSql(advisoryAnalyzeParam.getRSID(), sqlStr);
 
             if (resultParam.ResultCode >= 0) {
@@ -318,7 +319,7 @@ public class AdvisoryBusResource {
             }
             sqlList = new ArrayList<String>();
             //更新question标记处理完成
-            sqlList.add(String.format("update question set qSolveFlag=2,qSovleDate=getdate() where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
+            sqlList.add(String.format("update question set qSolveFlag=2,qSolveDate=getdate() where  qId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId)));
             //更新 handler 标记solve 处理人
             sqlList.add(String.format("update Handler set hSolve=2 , hQuitDate=getdate() where qId='%s' and hUId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_qId), UtileSmart.getStringFromMap(paramMap, paramKey_hUId)));
 

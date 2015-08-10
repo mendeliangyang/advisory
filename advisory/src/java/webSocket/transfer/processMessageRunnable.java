@@ -14,6 +14,7 @@ import webSocket.transfer.utile.wsTransferAnalyzerParam;
 import webSocket.transfer.utile.wsTransferMessageModel;
 import webSocket.transfer.utile.ChatRoomModel;
 import java.util.HashMap;
+import net.sf.json.JSONObject;
 import webSocket.transfer.utile.ADUserModel;
 import webSocket.transfer.utile.ParamDeployKey;
 
@@ -70,6 +71,7 @@ public class processMessageRunnable implements Runnable {
                     break;
             }
         } catch (Exception ex) {
+            webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Error, ex.getLocalizedMessage(), msgModel.operate));
             common.RSLogger.wsErrorLogInfo(ex.getLocalizedMessage(), ex);
         }
 
@@ -171,40 +173,46 @@ public class processMessageRunnable implements Runnable {
         }
     }
 
-    private void process_sendMsg() throws Exception {
+    private void process_sendRoomMsg() throws Exception {
+        msgModel.bodyValues = new HashMap<String, Object>();
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_message, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_msgId, null);
+        analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
+
+        //send message to room 
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.accumulate(ParamDeployKey.paramKey_message, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
+        transferOrigin.SendMsgToChatRoom(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId),
+                UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
+        //send message transfer success
+        jsonObject = new JSONObject();
+        jsonObject.accumulate(ParamDeployKey.paramKey_msgId, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_msgId));
+        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
+        //save messae to db
+        transferThreadPool.saveRoomMessageExecute(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId),
+                UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
+    }
+
+    private void process_sendSingleMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdReceive, null);
-        msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
         msgModel.bodyValues.put(ParamDeployKey.paramKey_message, null);
+        msgModel.bodyValues.put(ParamDeployKey.paramKey_msgId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
-        String resultStr = null, receiveFlag = null;
-        receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId);
-        if (receiveFlag != null) {
-            //send message to room ,
-            //save messae to db
-            //ChatRoomModel cRoom = new ChatRoomModel();
-            return;
-        }
-        receiveFlag = UtileSmart.tryGetStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive);
-        if (receiveFlag != null) {
-            //first send message to single user
-            //second save message to db
-
-            return;
-        }
-
-        ChatRoomModel cRoom = new ChatRoomModel();
-        //保存房间信息到数据库 获取新的roomId
-        ExecuteResultParam resultParam = syncDB.quitMember(cRoom, msgModel.bodyValues);
-        if (resultParam == null || resultParam.ResultCode < 0) {
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Error, resultParam != null ? resultParam.errMsg : "unkonw error", msgModel.operate);
-        } else {
-            transferOrigin.RemoveChatRoomBycrId(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId));
-            resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate);
-        }
-        transferOrigin.SendMsgToChatRoom(cRoom, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), resultStr);
-
+        // send message to special
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.accumulate(ParamDeployKey.paramKey_message, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
+        transferOrigin.SendMsgToSpecial(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive),
+                formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
+        //send message transfer success
+        jsonObject = new JSONObject();
+        jsonObject.accumulate(ParamDeployKey.paramKey_msgId, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_msgId));
+        webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
+        //save message to db
+        transferThreadPool.saveSingleMessageExecute(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
     }
 
     private void process_sginIn() throws Exception {
