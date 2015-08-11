@@ -16,8 +16,6 @@ import net.sf.json.JSONObject;
  */
 public class commonAnalyzeParam {
 
-   
-
     private String RSID = null;
     private String token = null;
 
@@ -107,7 +105,8 @@ public class commonAnalyzeParam {
                     } else if (objTemp instanceof JSONArray) {
                         paramModel.replace(key, JSONArray.fromObject(objTemp).toArray());
                     } else if (objTemp instanceof JSONObject) {
-                        throw new Exception("not supper jsonobject.");
+                        paramModel.replace(key, objTemp.toString());
+                        //throw new Exception("not supper jsonobject.");
                     } else {
                         throw new Exception("param unknow type.");
                     }

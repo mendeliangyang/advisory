@@ -5,7 +5,6 @@
  */
 package webSocket.transfer.utile;
 
-import webSocket.transfer.utile.wsTransferMessageModel;
 import common.base.commonAnalyzeParam;
 import common.model.ParamBaseModel;
 import net.sf.json.JSONArray;
@@ -34,7 +33,8 @@ public class wsTransferAnalyzerParam extends commonAnalyzeParam {
                 } else if (objTemp instanceof JSONArray) {
                     msModel.bodyValues.replace(key, JSONArray.fromObject(objTemp).toArray());
                 } else if (objTemp instanceof JSONObject) {
-                    throw new Exception("not supper jsonobject.");
+                    msModel.bodyValues.replace(key, objTemp.toString());
+                    //throw new Exception("not supper jsonobject.");
                 } else {
                     throw new Exception("param unknow type.");
                 }
@@ -67,7 +67,8 @@ public class wsTransferAnalyzerParam extends commonAnalyzeParam {
                 } else if (objTemp instanceof JSONArray) {
                     msModel.bodyValues.replace(key, JSONArray.fromObject(objTemp).toArray());
                 } else if (objTemp instanceof JSONObject) {
-                    throw new Exception("not supper jsonobject.");
+                    msModel.bodyValues.replace(key, objTemp.toString());
+                    //throw new Exception("not supper jsonobject.");
                 } else {
                     throw new Exception("param unknow type.");
                 }
