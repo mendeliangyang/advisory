@@ -103,7 +103,9 @@ public class transferOrigin {
     public static JSONArray getCurrentOnlineUserDetail() {
         JSONArray jsonArray = new JSONArray();
         for (ADUserModel keySet : verifySessions) {
-            jsonArray.add(keySet.toJson());
+            if (keySet.session != null) {
+                jsonArray.add(keySet.toJson());
+            }
         }
         return jsonArray;
     }
@@ -146,6 +148,21 @@ public class transferOrigin {
             DBHelper.CloseConnection(result, stmt, conn);
         }
 
+    }
+
+    /**
+     * find userDetail from verifySession by mUId if no exist . find to db.
+     *
+     * @param uId
+     * @return
+     */
+    public static ADUserModel searchUserDetailFromVerifySessionAndDB(String uId) {
+        for (ADUserModel verifySession : verifySessions) {
+            if (verifySession.uId.equals(uId)) {
+                return verifySession;
+            }
+        }
+        return getUserDetailFromDB(uId);
     }
 
     /**
@@ -230,7 +247,8 @@ public class transferOrigin {
             while (keyIterator.hasNext()) {
                 ADUserModel next = (ADUserModel) keyIterator.next();
                 if (next.session.getId().equals(SessionId)) {
-                    verifySessions.remove(next);
+                    //verifySessions.remove(next);
+                    next.session = null;
                     return next;
                 }
             }
@@ -454,6 +472,15 @@ public class transferOrigin {
 
     public static void broadMsgToVerifySession(String message) {
         for (ADUserModel verifySession : verifySessions) {
+            WebSocketHelper.asyncSendTextToClient(verifySession.session, message);
+        }
+    }
+
+    public static void broadMsgToVerifySession( String igonreUId,String message) {
+        for (ADUserModel verifySession : verifySessions) {
+            if (verifySession.uId.equals(igonreUId)) {
+                continue;
+            }
             WebSocketHelper.asyncSendTextToClient(verifySession.session, message);
         }
     }

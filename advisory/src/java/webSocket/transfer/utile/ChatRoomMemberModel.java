@@ -7,6 +7,7 @@ package webSocket.transfer.utile;
 
 import javax.websocket.Session;
 import net.sf.json.JSONObject;
+import webSocket.transfer.transferOrigin;
 
 /**
  *
@@ -14,7 +15,7 @@ import net.sf.json.JSONObject;
  */
 public class ChatRoomMemberModel {
 
-    // public ADUserModel adUser = null;
+    public ADUserModel adUser = null;
     public String mUId = null;
     public Session session = null;
     public String inviteUId = null;
@@ -25,11 +26,16 @@ public class ChatRoomMemberModel {
         jsonObj.accumulate("crId", crId);
         jsonObj.accumulate("mUId", mUId);
         jsonObj.accumulate("inviteUId", inviteUId);
+        if (adUser == null) {
+            //first  find userDetail from verifySession by mUId if no exist. find to db.
+            adUser = transferOrigin.searchUserDetailFromVerifySessionAndDB(mUId);
+        }
+        jsonObj.accumulate("UserDetail", adUser == null ? null : adUser.toJson());
         return jsonObj;
     }
 
     public void destory() {
-        // adUser = null;
+        adUser = null;
         mUId = null;
         session = null;
         inviteUId = null;

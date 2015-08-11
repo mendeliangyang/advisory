@@ -23,18 +23,18 @@ import webSocket.transfer.utile.ParamDeployKey;
  * @author Administrator
  */
 public class processMessageRunnable implements Runnable {
-
+    
     wsTransferMessageModel msgModel = null;
     wsTransferAnalyzerParam analyzerParam = new wsTransferAnalyzerParam();
     transferSyncDB syncDB = new transferSyncDB();
     FormationResult formationResult = new FormationResult();
     Session currentSession;
-
+    
     public processMessageRunnable(String strMsg, Session session) throws Exception {
         msgModel = analyzerParam.wsBaseAnalyzerOperate(strMsg);
         currentSession = session;
     }
-
+    
     @Override
     public void run() {
         if (msgModel == null) {
@@ -74,9 +74,9 @@ public class processMessageRunnable implements Runnable {
             webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Error, ex.getLocalizedMessage(), msgModel.operate));
             common.RSLogger.wsErrorLogInfo(ex.getLocalizedMessage(), ex);
         }
-
+        
     }
-
+    
     private void proess_createRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
@@ -96,9 +96,9 @@ public class processMessageRunnable implements Runnable {
             resultStr = formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, cRoom.toJson());
             transferOrigin.SendMsgToChatRoom(cRoom, resultStr);
         }
-
+        
     }
-
+    
     private void process_invalidRoom(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -114,9 +114,9 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(cRoom.crId, resultStr);
             transferOrigin.RemoveChatRoomBycrId(cRoom.crId);
         }
-
+        
     }
-
+    
     private void process_putMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_crId, null);
@@ -135,7 +135,7 @@ public class processMessageRunnable implements Runnable {
             transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
         }
     }
-
+    
     private void process_quitMember(String resultStr) throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_mUId, null);
@@ -169,10 +169,10 @@ public class processMessageRunnable implements Runnable {
                 //发送消息到房间其他人
                 transferOrigin.SendMsgToChatRoom(transferOrigin.putChatRoomMembers(cRoom), resultStr);
             }
-
+            
         }
     }
-
+    
     private void process_sendRoomMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
@@ -184,6 +184,7 @@ public class processMessageRunnable implements Runnable {
         //send message to room 
         JSONObject jsonObject = new JSONObject();
         jsonObject.accumulate(ParamDeployKey.paramKey_message, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
+        jsonObject.accumulate(ParamDeployKey.paramKey_uIdSend, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend));
         transferOrigin.SendMsgToChatRoom(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId),
                 UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
         //send message transfer success
@@ -194,7 +195,7 @@ public class processMessageRunnable implements Runnable {
         transferThreadPool.saveRoomMessageExecute(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_crId),
                 UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
     }
-
+    
     private void process_sendSingleMsg() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uIdSend, null);
@@ -205,6 +206,7 @@ public class processMessageRunnable implements Runnable {
         // send message to special
         JSONObject jsonObject = new JSONObject();
         jsonObject.accumulate(ParamDeployKey.paramKey_message, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
+        jsonObject.accumulate(ParamDeployKey.paramKey_uIdSend, UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend));
         transferOrigin.SendMsgToSpecial(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive),
                 formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, jsonObject));
         //send message transfer success
@@ -214,19 +216,19 @@ public class processMessageRunnable implements Runnable {
         //save message to db
         transferThreadPool.saveSingleMessageExecute(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdReceive), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uIdSend), UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_message));
     }
-
+    
     private void process_sginIn() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);
         analyzerParam.wsBaseAnalyzeBodyMap(msgModel);
         //openSessions record sgin user
         ADUserModel userModel = transferOrigin.addVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), currentSession);
-
+        
         webSocket.WebSocketHelper.asyncSendTextToClient(currentSession, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, msgModel.operate, transferOrigin.getChatRoomsJosn(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId))));
-
-        transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signInNotify, userModel.toJson()));
+        
+        transferOrigin.broadMsgToVerifySession(UtileSmart.getStringFromMap(msgModel.bodyValues, ParamDeployKey.paramKey_uId), formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signInNotify, userModel.toJson()));
     }
-
+    
     private void process_sginOut() throws Exception {
         msgModel.bodyValues = new HashMap<String, Object>();
         msgModel.bodyValues.put(ParamDeployKey.paramKey_uId, null);

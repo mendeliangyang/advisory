@@ -42,7 +42,7 @@ public class wsTransfer {
 
     @OnError
     public void onError(Session session, Throwable t) {
-        common.RSLogger.wsErrorLogInfo("AssignTrial onError" + t.getLocalizedMessage(), new Exception(t));
+        common.RSLogger.wsErrorLogInfo("transfer onError." + t.getLocalizedMessage(), new Exception(t));
     }
 
     @OnOpen
@@ -50,19 +50,13 @@ public class wsTransfer {
         //peers.add(session);
         //common.RSLogger.LogInfo(String.format("AssignTrial onOpen '%s' open", session.getId()));
         transferOrigin.openSesions.add(session);
-
         webSocket.WebSocketHelper.asyncSendTextToClient(session, formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_getOnlineUser, transferOrigin.getCurrentOnlineUserDetail()));
-
-        System.out.println(String.format("AssignTrial onOpen '%s' open", session.getId()));
     }
 
     @OnClose
     public void onClose(Session session) {
-        //peers.remove(session);
-        //common.RSLogger.wsErrorLogInfo(String.format("AssignTrial onClose '%s' close", session.getId()));
         ADUserModel userModel = transferOrigin.removeVerifySessionBySessionId(session.getId());
         transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signOutNotify, userModel.toJson()));
-        System.out.println(String.format("AssignTrial onClose '%s' open", session.getId()));
     }
 
 }
