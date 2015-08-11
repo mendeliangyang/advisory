@@ -198,7 +198,7 @@ public class AdvisoryBusResource {
     @POST
     @Path("subMitQ")
     public String subMitQ(String param) {
-        String paramKey_uId = "uId", paramKey_qTitle = "qTitle", paramKey_specialSovleUId = "specialSovleUId";
+        String paramKey_uId = "uId", paramKey_qTitle = "qTitle", paramKey_specialSolveUId = "specialSolveUId";
         ExecuteResultParam resultParam = null;
         String sqlStr = null, qId = null;
         Map<String, Object> paramMap = null;
@@ -208,14 +208,14 @@ public class AdvisoryBusResource {
 
             paramMap.put(paramKey_uId, null);
             paramMap.put(paramKey_qTitle, null);
-            paramMap.put(paramKey_specialSovleUId, null);
+            paramMap.put(paramKey_specialSolveUId, null);
 
             advisoryAnalyzeParam.AnalyzeParamBodyToMap(param, paramMap);
             qId = common.UtileSmart.getUUID();
-            sqlStr = String.format("insert into question (qId,qTitle,qPutDate,uId,specialSovleUId) values ('%s','%s',getdate(),'%s','%s')",
+            sqlStr = String.format("insert into question (qId,qTitle,qPutDate,uId,specialSolveUId) values ('%s','%s',getdate(),'%s','%s')",
                     qId,
                     UtileSmart.getStringFromMap(paramMap, paramKey_qTitle),
-                    UtileSmart.getStringFromMap(paramMap, paramKey_uId), UtileSmart.tryGetStringFromMap(paramMap, paramKey_specialSovleUId));
+                    UtileSmart.getStringFromMap(paramMap, paramKey_uId), UtileSmart.tryGetStringFromMap(paramMap, paramKey_specialSolveUId));
             resultParam = DBHelper.ExecuteSql(advisoryAnalyzeParam.getRSID(), sqlStr);
 
             if (resultParam.ResultCode >= 0) {
