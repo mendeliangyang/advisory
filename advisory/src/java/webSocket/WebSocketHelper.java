@@ -17,6 +17,9 @@ import javax.websocket.Session;
 public class WebSocketHelper {
 
     public static boolean sendTextToClient(Session session, String strMsg) throws IOException {
+        if (session == null) {
+            return false;
+        }
         if (session.isOpen()) {
             session.getBasicRemote().sendText(strMsg);
             return true;
@@ -25,6 +28,9 @@ public class WebSocketHelper {
     }
 
     public static boolean asyncSendTextToClient(Session session, String strMsg) {
+        if (session == null) {
+            return false;
+        }
         if (session.isOpen()) {
             session.getAsyncRemote().sendText(strMsg);
             return true;

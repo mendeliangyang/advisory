@@ -247,8 +247,8 @@ public class transferOrigin {
             while (keyIterator.hasNext()) {
                 ADUserModel next = (ADUserModel) keyIterator.next();
                 if (next.session.getId().equals(SessionId)) {
-                    //verifySessions.remove(next);
-                    next.session = null;
+                    verifySessions.remove(next);
+                    //next.session = null;
                     return next;
                 }
             }

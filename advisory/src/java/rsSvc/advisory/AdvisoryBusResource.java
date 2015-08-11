@@ -409,7 +409,6 @@ public class AdvisoryBusResource {
                 return formationResult.formationResult(ResponseResultCode.Error, new ExecuteResultParam("您输入的用户账号有误", param));
             } else {
                 //调用  验证接口
-
                 sqlStr = String.format("update AdUser set uPwd = '%s' where uId='%s'", UtileSmart.getStringFromMap(paramMap, paramKey_uPwd), selectResultStr);
                 resultParam = DBHelper.ExecuteSql(advisoryAnalyzeParam.getRSID(), sqlStr);
                 if (resultParam.ResultCode >= 0) {

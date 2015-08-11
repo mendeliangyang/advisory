@@ -56,6 +56,9 @@ public class wsTransfer {
     @OnClose
     public void onClose(Session session) {
         ADUserModel userModel = transferOrigin.removeVerifySessionBySessionId(session.getId());
+        if (userModel == null) {
+            return;
+        }
         transferOrigin.broadMsgToVerifySession(formationResult.formationWSTransferResult(ResponseResultCode.Success, null, wsTransferOperateDefinite.Operate_signOutNotify, userModel.toJson()));
     }
 
