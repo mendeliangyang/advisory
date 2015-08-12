@@ -210,6 +210,7 @@ public class transferOrigin {
             //get userInfomation error.
             return null;
         }
+        removeVerifySessionByUId(userModel.uId);
         userModel.session = session;
         synchronized (verifySessions) {
             verifySessions.add(userModel);
@@ -476,7 +477,7 @@ public class transferOrigin {
         }
     }
 
-    public static void broadMsgToVerifySession( String igonreUId,String message) {
+    public static void broadMsgToVerifySession(String igonreUId, String message) {
         for (ADUserModel verifySession : verifySessions) {
             if (verifySession.uId.equals(igonreUId)) {
                 continue;
