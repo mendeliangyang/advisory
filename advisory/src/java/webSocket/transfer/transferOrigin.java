@@ -210,7 +210,7 @@ public class transferOrigin {
             //get userInfomation error.
             return null;
         }
-        removeVerifySessionByUId(userModel.uId);
+        removeVerifySessionByUId(key);
         userModel.session = session;
         synchronized (verifySessions) {
             verifySessions.add(userModel);
@@ -229,6 +229,7 @@ public class transferOrigin {
             while (keyIterator.hasNext()) {
                 ADUserModel next = (ADUserModel) keyIterator.next();
                 if (next.uId.equals(uId)) {
+                    WebSocketHelper.closeSession(next.session);
                     verifySessions.remove(next);
                     return true;
                 }
@@ -315,7 +316,8 @@ public class transferOrigin {
     public static Session getVerifySessionByChatRoomMember(ChatRoomMemberModel member) {
         for (ADUserModel keySet : verifySessions) {
             if (keySet.uId.equals(member.mUId)) {
-                return member.session = keySet.session;
+                member.session = keySet.session;
+                return member.session;
             }
         }
         return null;
@@ -430,7 +432,7 @@ public class transferOrigin {
                 getVerifySessionByChatRoomMember(crMember);
             }
             if (crMember.mUId.equals(uIdSend)) {
-                break;
+                continue;
             }
             if (crMember.session != null) {
                 WebSocketHelper.asyncSendTextToClient(crMember.session, message);

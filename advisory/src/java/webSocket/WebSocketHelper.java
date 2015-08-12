@@ -8,6 +8,8 @@ package webSocket;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.websocket.Session;
 
 /**
@@ -15,7 +17,7 @@ import javax.websocket.Session;
  * @author Administrator
  */
 public class WebSocketHelper {
-
+    
     public static boolean sendTextToClient(Session session, String strMsg) throws IOException {
         if (session == null) {
             return false;
@@ -26,7 +28,7 @@ public class WebSocketHelper {
         }
         return false;
     }
-
+    
     public static boolean asyncSendTextToClient(Session session, String strMsg) {
         if (session == null) {
             return false;
@@ -34,6 +36,22 @@ public class WebSocketHelper {
         if (session.isOpen()) {
             session.getAsyncRemote().sendText(strMsg);
             return true;
+        }
+        return false;
+    }
+    
+    public static boolean closeSession(Session session) {
+        if (session == null) {
+            return false;
+        }
+        if (session.isOpen()) {
+            try {
+                session.close();
+                return true;
+            } catch (IOException ex) {
+                common.RSLogger.wsErrorLogInfo("closeSession error" + ex.getLocalizedMessage(), ex);
+                return false;
+            }
         }
         return false;
     }
@@ -47,7 +65,7 @@ public class WebSocketHelper {
      */
     public static void asyncSendTextToClient(Set<Session> sessions, String strMsg) throws IOException {
         Set<Session> closeSessions = new HashSet<>();
-
+        
         for (Session session : sessions) {
             if (session.isOpen()) {
                 session.getAsyncRemote().sendText(strMsg);
@@ -55,12 +73,12 @@ public class WebSocketHelper {
                 closeSessions.add(session);
             }
         }
-
+        
         for (Session closeSession : closeSessions) {
             synchronized (sessions) {
                 sessions.remove(closeSession);
             }
         }
-
+        
     }
 }
