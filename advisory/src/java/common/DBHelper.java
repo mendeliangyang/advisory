@@ -29,8 +29,8 @@ import snaq.db.ConnectionPool;
 
 public class DBHelper {
 
-    private static int ConnectionPoolTimeout = 4000;//4s，超时时间
-    private static int GetConnectionFromPoolTimeout = 10000;//从连接池中获取链接超时时间10s，
+    private static final int ConnectionPoolTimeout = 4000;//4s，超时时间
+    private static final int GetConnectionFromPoolTimeout = 10000;//从连接池中获取链接超时时间10s，
 
     private static Map<String, ConnectionPool> mapConnectionPool = new HashMap<>();
 
