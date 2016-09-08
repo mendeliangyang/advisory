@@ -29,7 +29,7 @@ public class transferThreadPool {
         processMessagePool.execute(run);
     }
 
-    public static void saveSingleMessageExecute(String uIdReceive, String uIdSend, String message) {
+    public static void saveSingleMessageExecute(final String uIdReceive,final String uIdSend,final String message) {
         Runnable run = new Runnable() {
             @Override
             public void run() {
@@ -39,7 +39,7 @@ public class transferThreadPool {
         saveDataPool.execute(run);
     }
 
-    public static void saveRoomMessageExecute(String crId, String uIdSend, String message) {
+    public static void saveRoomMessageExecute(final String crId,final String uIdSend,final String message) {
         Runnable run = new Runnable() {
             @Override
             public void run() {
